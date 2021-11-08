@@ -112,13 +112,15 @@ const VirtualizedList: React.ForwardRefRenderFunction<
   const newItemAppearRef = useRef(false);
   const containerSizeChangedRef = useRef(false);
 
-  const scrollToBottom = useCallback(
-    (el: Element) => {
-      const { scrollHeight } = el;
-      el.scrollTo({ top: scrollHeight + 10e5, behavior: "auto" });
-    },
-    [],
-  );
+  const scrollToBottom = useCallback((el: Element) => {
+    const { scrollHeight, scrollTop, clientHeight } = el;
+    let behavior: ScrollBehavior = 'auto';
+    const toScrollDistance = scrollHeight - scrollTop - clientHeight;
+    if (toScrollDistance < 2000) {
+      behavior = 'smooth';
+    }
+    el.scrollTo({ top: toScrollDistance + 10e5, behavior });
+  }, []);
 
   if (cacheItemsBottomRef.current.length !== itemCount) {
     const cacheItemsBottom = cacheItemsBottomRef.current;
@@ -393,6 +395,8 @@ const VirtualizedList: React.ForwardRefRenderFunction<
           position: 'absolute',
           top: '0',
           transform: `translate3d(0, ${offsetTop}px, 0)`,
+          display: 'flex',
+          flexDirection: 'column',
         }}>
         {items.map(({ key, node }, i) => (
           <Item
